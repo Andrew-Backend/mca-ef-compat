@@ -1,0 +1,112 @@
+package forge.net.mca.resources.data.dialogue;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import forge.net.mca.entity.VillagerEntityMCA;
+import forge.net.mca.entity.interaction.Constraint;
+import forge.net.mca.entity.interaction.InteractionPredicate;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import net.minecraft.server.level.ServerPlayer;
+
+public class Question {
+   private final String name;
+   private final List<Answer> answers;
+   private final boolean auto;
+   private final boolean silent;
+   private final Random random = new Random();
+
+   public Question(String id, List<Answer> answers, boolean auto, boolean silent) {
+      this.name = id;
+      this.answers = answers;
+      this.auto = auto;
+      this.silent = silent;
+   }
+
+   public static Question fromJson(String id, JsonObject json) {
+      boolean auto = json.has("auto") && json.get("auto").getAsBoolean();
+      boolean silent = json.has("silent") && json.get("silent").getAsBoolean();
+      List<Answer> answers = new LinkedList<>();
+
+      for (JsonElement e : json.getAsJsonArray("answers")) {
+         answers.add(Answer.fromJson(e.getAsJsonObject()));
+      }
+
+      if (json.has("baseConditions")) {
+         int r = 0;
+
+         for (JsonElement conditions : json.getAsJsonArray("baseConditions")) {
+            for (JsonElement e : conditions.getAsJsonArray()) {
+               InteractionPredicate predicate = InteractionPredicate.fromJson(e.getAsJsonObject());
+               int finalR = r;
+               answers.forEach(a -> a.getResults().get(finalR).getConditions().add(predicate));
+            }
+
+            r++;
+         }
+      }
+
+      return new Question(id, answers, auto, silent);
+   }
+
+   public String getName() {
+      return this.name;
+   }
+
+   public List<Answer> getAnswers() {
+      return this.answers;
+   }
+
+   public boolean isCloseScreen() {
+      return this.answers == null;
+   }
+
+   public Answer getAnswer(String answer) {
+      for (Answer a : this.answers) {
+         if (a.getName().equals(answer)) {
+            return a;
+         }
+      }
+
+      return null;
+   }
+
+   public static String getTranslationKey(String question) {
+      return "dialogue." + question;
+   }
+
+   public static String getTranslationKey(String question, String answer) {
+      return "dialogue." + question + "." + answer;
+   }
+
+   public boolean isAuto() {
+      return this.auto;
+   }
+
+   public List<String> getValidAnswers(ServerPlayer player, VillagerEntityMCA villager) {
+      Set<Constraint> constraints = Constraint.allMatching(villager, player);
+      List<String> ans = new LinkedList<>();
+
+      for (Answer a : this.answers) {
+         if (a.isValidForConstraint(constraints)) {
+            ans.add(a.getName());
+         }
+      }
+
+      return ans;
+   }
+
+   public boolean isSilent() {
+      return this.silent;
+   }
+
+   public void merge(Question question) {
+      this.answers.addAll(question.getAnswers());
+   }
+
+   public Answer getRandomAnswer() {
+      return this.answers.get(this.random.nextInt(this.answers.size()));
+   }
+}

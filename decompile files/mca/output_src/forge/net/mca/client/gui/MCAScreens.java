@@ -1,0 +1,58 @@
+package forge.net.mca.client.gui;
+
+import com.google.gson.JsonElement;
+import com.google.gson.reflect.TypeToken;
+import forge.net.mca.client.resources.Icon;
+import forge.net.mca.resources.Resources;
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.server.packs.resources.SimpleJsonResourceReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
+
+public class MCAScreens extends SimpleJsonResourceReloadListener {
+   protected static final ResourceLocation ID = new ResourceLocation("mca", "screens");
+   private static final Type ICONS_TYPE = (new TypeToken<Map<String, Icon>>() {}).getType();
+   private static MCAScreens INSTANCE;
+   private final Map<String, Button[]> buttons = new HashMap<>();
+   private final Map<String, Icon> icons = new HashMap<>();
+
+   public static MCAScreens getInstance() {
+      return INSTANCE;
+   }
+
+   public MCAScreens() {
+      super(Resources.GSON, "api/gui");
+      INSTANCE = this;
+   }
+
+   protected void apply(Map<ResourceLocation, JsonElement> data, ResourceManager manager, ProfilerFiller profiler) {
+      this.buttons.clear();
+      this.icons.clear();
+      data.forEach(this::loadScreen);
+   }
+
+   private void loadScreen(ResourceLocation id, JsonElement element) {
+      if (element.isJsonObject()) {
+         this.icons.putAll((Map<? extends String, ? extends Icon>)Resources.GSON.fromJson(element, ICONS_TYPE));
+      } else {
+         this.buttons.put(id.m_135815_(), (Button[])Resources.GSON.fromJson(element, Button[].class));
+      }
+   }
+
+   public Icon getIcon(String key) {
+      return this.icons.getOrDefault(key, Icon.EMPTY);
+   }
+
+   public Optional<Button[]> getScreen(String guiKey) {
+      return Optional.ofNullable(this.buttons.get(guiKey));
+   }
+
+   public Optional<Button> getButton(String key, String id) {
+      return Arrays.stream(this.buttons.get(key)).filter(b -> b.identifier().equals(id)).findFirst();
+   }
+}

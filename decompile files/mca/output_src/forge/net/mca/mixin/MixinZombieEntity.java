@@ -1,0 +1,27 @@
+package forge.net.mca.mixin;
+
+import forge.net.mca.entity.VillagerEntityMCA;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.level.Level;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+@Mixin(Zombie.class)
+public abstract class MixinZombieEntity extends Monster {
+   protected MixinZombieEntity(EntityType<? extends Monster> entityType, Level world) {
+      super(entityType, world);
+   }
+
+   @Inject(method = "m_214076_(Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/entity/LivingEntity;)Z", at = @At("HEAD"), cancellable = true)
+   public void mca$onKilledOther(ServerLevel world, LivingEntity other, CallbackInfoReturnable<Boolean> cir) {
+      if (other instanceof VillagerEntityMCA) {
+         cir.setReturnValue(super.m_214076_(world, other));
+      }
+   }
+}

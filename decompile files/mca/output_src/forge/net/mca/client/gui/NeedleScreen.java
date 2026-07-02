@@ -1,0 +1,40 @@
+package forge.net.mca.client.gui;
+
+import forge.net.mca.MCA;
+import forge.net.mca.cobalt.network.NetworkHandler;
+import forge.net.mca.network.c2s.DamageItemMessage;
+import java.util.UUID;
+
+public class NeedleScreen extends VillagerEditorScreen {
+   public NeedleScreen(UUID playerUUID) {
+      super(playerUUID, playerUUID);
+   }
+
+   public NeedleScreen(UUID villagerUUID, UUID playerUUID) {
+      super(villagerUUID, playerUUID);
+   }
+
+   @Override
+   protected boolean shouldShowPageSelection() {
+      return false;
+   }
+
+   @Override
+   protected void eventCallback(String event) {
+      if (event.equals("clothing")) {
+         NetworkHandler.sendToServer(new DamageItemMessage(MCA.locate("needle_and_thread")));
+      }
+   }
+
+   @Override
+   protected void setPage(String page) {
+      if (page.equals("loading")) {
+         super.setPage("loading");
+      } else if (page.equals("body")) {
+         this.syncVillagerData();
+         this.m_7379_();
+      } else {
+         super.setPage("clothing");
+      }
+   }
+}

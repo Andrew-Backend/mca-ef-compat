@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Specification-Title: epicfight
+Specification-Vendor: Yesman(a.k.a maninthe_home)
+Specification-Version: 1
+Implementation-Title: Epic Fight
+Implementation-Version: 20.14.14-mc1.20.1-forge
+Implementation-Vendor: Yesman(a.k.a maninthe_home)
+Implementation-Timestamp: 2026-04-05T16:03:57+0900
+MixinConfigs: mixins.epicfight.json
+

@@ -1,0 +1,129 @@
+package quilt.net.mca.entity.interaction;
+
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import net.minecraft.class_3218;
+import net.minecraft.class_3222;
+import net.minecraft.class_3852;
+import quilt.net.mca.MCA;
+import quilt.net.mca.ProfessionsMCA;
+import quilt.net.mca.entity.VillagerEntityMCA;
+import quilt.net.mca.entity.VillagerLike;
+import quilt.net.mca.entity.ai.MoveState;
+import quilt.net.mca.entity.ai.Relationship;
+import quilt.net.mca.entity.ai.relationship.AgeState;
+import quilt.net.mca.resources.Rank;
+import quilt.net.mca.resources.Tasks;
+import quilt.net.mca.server.world.data.PlayerSaveData;
+import quilt.net.mca.server.world.data.Village;
+import quilt.net.mca.server.world.data.VillageManager;
+
+public enum Constraint implements BiPredicate<VillagerLike<?>, class_3222> {
+   FAMILY("family", Relationship.IS_FAMILY.asConstraint()),
+   NOT_FAMILY("!family", Relationship.IS_FAMILY.negate().asConstraint()),
+   BABY("baby", (villager, player) -> villager.getAgeState() == AgeState.BABY),
+   NOT_BABY("!baby", (villager, player) -> villager.getAgeState() != AgeState.BABY),
+   TODDLER("toddler", (villager, player) -> villager.getAgeState() == AgeState.TODDLER),
+   NOT_TODDLER("!toddler", (villager, player) -> villager.getAgeState() != AgeState.TODDLER),
+   TEEN("teen", (villager, player) -> villager.getAgeState() == AgeState.TEEN),
+   NOT_TEEN("!teen", (villager, player) -> villager.getAgeState() != AgeState.TEEN),
+   ADULT("adult", (villager, player) -> villager.getAgeState() == AgeState.ADULT),
+   NOT_ADULT("!adult", (villager, player) -> villager.getAgeState() != AgeState.ADULT),
+   SPOUSE("spouse", Relationship.IS_MARRIED.asConstraint()),
+   NOT_SPOUSE("!spouse", Relationship.IS_MARRIED.negate().asConstraint()),
+   ENGAGED("engaged", Relationship.IS_ENGAGED.asConstraint()),
+   NOT_ENGAGED("!engaged", Relationship.IS_ENGAGED.negate().asConstraint()),
+   PROMISED("promised", Relationship.IS_PROMISED.asConstraint()),
+   NOT_PROMISED("!promised", Relationship.IS_PROMISED.negate().asConstraint()),
+   KIDS("kids", Relationship.IS_PARENT.asConstraint()),
+   NOT_KIDS("!kids", Relationship.IS_PARENT.negate().asConstraint()),
+   PARENT("parent", Relationship.IS_KID.asConstraint()),
+   NOT_PARENT("!parent", Relationship.IS_KID.negate().asConstraint()),
+   CLERIC("cleric", (villager, player) -> villager.method_7231().method_16924() == class_3852.field_17055),
+   NOT_CLERIC("!cleric", (villager, player) -> villager.method_7231().method_16924() != class_3852.field_17055),
+   ADVENTURER("adventurer", (villager, player) -> villager.method_7231().method_16924() == ProfessionsMCA.ADVENTURER.get()),
+   NOT_ADVENTURER("!adventurer", (villager, player) -> villager.method_7231().method_16924() != ProfessionsMCA.ADVENTURER.get()),
+   MERCENARY("mercenary", (villager, player) -> villager.method_7231().method_16924() == ProfessionsMCA.MERCENARY.get()),
+   NOT_MERCENARY("!mercenary", (villager, player) -> villager.method_7231().method_16924() != ProfessionsMCA.MERCENARY.get()),
+   OUTLAWED("outlawed", (villager, player) -> villager.method_7231().method_16924() == ProfessionsMCA.OUTLAW.get()),
+   NOT_OUTLAWED("!outlawed", (villager, player) -> villager.method_7231().method_16924() != ProfessionsMCA.OUTLAW.get()),
+   TRADER("trader", (villager, player) -> villager.canTradeWithProfession()),
+   NOT_TRADER("!trader", (villager, player) -> !villager.canTradeWithProfession()),
+   PEASANT("peasant", (villager, player) -> isRankAtLeast(villager, player, Rank.PEASANT)),
+   NOT_PEASANT("!peasant", (villager, player) -> !isRankAtLeast(villager, player, Rank.PEASANT)),
+   NOBLE("noble", (villager, player) -> isRankAtLeast(villager, player, Rank.NOBLE)),
+   NOT_NOBLE("!noble", (villager, player) -> !isRankAtLeast(villager, player, Rank.NOBLE)),
+   MAYOR("mayor", (villager, player) -> isRankAtLeast(villager, player, Rank.MAYOR)),
+   NOT_MAYOR("!mayor", (villager, player) -> !isRankAtLeast(villager, player, Rank.MAYOR)),
+   MONARCH("monarch", (villager, player) -> isRankAtLeast(villager, player, Rank.MONARCH)),
+   NOT_MONARCH("!monarch", (villager, player) -> !isRankAtLeast(villager, player, Rank.MONARCH)),
+   ORPHAN("orphan", Relationship.IS_ORPHAN.asConstraint()),
+   NOT_ORPHAN("!orphan", Relationship.IS_ORPHAN.negate().asConstraint()),
+   FOLLOWING("following", (villager, player) -> villager.getVillagerBrain().getMoveState() == MoveState.FOLLOW),
+   NOT_FOLLOWING("!following", (villager, player) -> villager.getVillagerBrain().getMoveState() != MoveState.FOLLOW),
+   STAYING("staying", (villager, player) -> villager.getVillagerBrain().getMoveState() == MoveState.STAY),
+   NOT_STAYING("!staying", (villager, player) -> villager.getVillagerBrain().getMoveState() != MoveState.STAY),
+   VILLAGE_HAS_SPACE(
+      "village_has_space",
+      (villager, player) -> PlayerSaveData.get(player)
+         .getLastSeenVillage(VillageManager.get((class_3218)player.method_37908()))
+         .filter(Village::hasSpace)
+         .isPresent()
+   ),
+   NOT_VILLAGE_HAS_SPACE(
+      "!village_has_space",
+      (villager, player) -> PlayerSaveData.get(player)
+         .getLastSeenVillage(VillageManager.get((class_3218)player.method_37908()))
+         .filter(Village::hasSpace)
+         .isEmpty()
+   ),
+   HAS_VILLAGE(
+      "has_village", (villager, player) -> villager instanceof VillagerEntityMCA mcaVillager && mcaVillager.getResidency().getHomeVillage().isPresent()
+   ),
+   NOT_HAS_VILLAGE(
+      "!has_village", (villager, player) -> villager instanceof VillagerEntityMCA mcaVillager && mcaVillager.getResidency().getHomeVillage().isEmpty()
+   ),
+   HIT_BY("hit_by", (villager, player) -> villager instanceof VillagerEntityMCA v ? v.isHitBy(player) : false),
+   NOT_HIT_BY("!hit_by", (villager, player) -> !HIT_BY.test(villager, player));
+
+   public static final Map<String, Constraint> REGISTRY = Stream.of(values()).collect(Collectors.toMap(a -> a.id, Function.identity()));
+   private final String id;
+   private final BiPredicate<VillagerLike<?>, class_3222> check;
+
+   private static boolean isRankAtLeast(VillagerLike<?> villager, class_3222 player, Rank rank) {
+      return player != null
+         && villager instanceof VillagerEntityMCA
+         && ((VillagerEntityMCA)villager).getResidency().getHomeVillage().filter(village -> Tasks.getRank(village, player).isAtLeast(rank)).isPresent();
+   }
+
+   Constraint(String id, BiPredicate<VillagerLike<?>, class_3222> check) {
+      this.id = id;
+      this.check = check;
+   }
+
+   public boolean test(VillagerLike<?> t, class_3222 u) {
+      return this.check.test(t, u);
+   }
+
+   public static Set<Constraint> all() {
+      return new HashSet<>(REGISTRY.values());
+   }
+
+   public static Set<Constraint> allMatching(VillagerLike<?> villager, class_3222 player) {
+      return Stream.of(values()).filter(c -> c.test(villager, player)).collect(Collectors.toSet());
+   }
+
+   public static List<Constraint> fromStringList(String constraints) {
+      return MCA.isBlankString(constraints)
+         ? new ArrayList<>()
+         : Stream.of(constraints.split(",")).map(REGISTRY::get).filter(Objects::nonNull).collect(Collectors.toList());
+   }
+}

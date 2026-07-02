@@ -1,0 +1,63 @@
+package yesman.epicfight.api.animation.types;
+
+import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.ApiStatus.Internal;
+import yesman.epicfight.api.animation.AnimationManager;
+import yesman.epicfight.api.asset.AssetAccessor;
+import yesman.epicfight.api.model.Armature;
+
+public class DirectStaticAnimation extends StaticAnimation implements AnimationManager.AnimationAccessor<DirectStaticAnimation> {
+   private ResourceLocation registryName;
+
+   public DirectStaticAnimation() {
+      this.accessor = this;
+   }
+
+   public DirectStaticAnimation(float transitionTime, boolean isRepeat, ResourceLocation registryName, AssetAccessor<? extends Armature> armature) {
+      super(transitionTime, isRepeat, registryName.toString(), armature);
+      this.registryName = registryName;
+      this.accessor = this;
+   }
+
+   @Internal
+   public DirectStaticAnimation(
+      ResourceLocation baseAnimPath, float transitionTime, boolean repeatPlay, String registryName, AssetAccessor<? extends Armature> armature
+   ) {
+      super(baseAnimPath, transitionTime, repeatPlay, registryName, armature);
+      this.registryName = ResourceLocation.parse(registryName);
+   }
+
+   public DirectStaticAnimation get() {
+      return this;
+   }
+
+   @Override
+   public <A extends DynamicAnimation> AnimationManager.AnimationAccessor<A> getAccessor() {
+      return this;
+   }
+
+   @Override
+   public ResourceLocation registryName() {
+      return this.registryName;
+   }
+
+   @Override
+   public boolean isPresent() {
+      return true;
+   }
+
+   @Override
+   public int id() {
+      return -1;
+   }
+
+   @Override
+   public int getId() {
+      return -1;
+   }
+
+   @Override
+   public boolean inRegistry() {
+      return false;
+   }
+}

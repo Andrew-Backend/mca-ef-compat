@@ -1,0 +1,22 @@
+package fabric.net.mca.client.book.pages;
+
+import java.util.LinkedList;
+import java.util.List;
+import java.util.function.Function;
+import net.minecraft.class_2561;
+
+public class DynamicListPage extends CenteredListPage {
+   private final Function<Page, List<class_2561>> generator;
+
+   public DynamicListPage(String title, Function<Page, List<class_2561>> generator) {
+      super(title, new LinkedList<>());
+      this.generator = generator;
+   }
+
+   @Override
+   public void open(boolean back) {
+      this.text.clear();
+      this.text.addAll(this.generator.apply(this));
+      super.open(back);
+   }
+}
