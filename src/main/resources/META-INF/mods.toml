@@ -1,0 +1,40 @@
+modLoader = "javafml"
+loaderVersion = "[47,)"
+license = "MIT"
+
+[[dependencies.mcaefcompat]]
+    modId = "forge"
+    mandatory = true
+    versionRange = "[47,)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.mcaefcompat]]
+    modId = "minecraft"
+    mandatory = true
+    versionRange = "[1.20.1,1.21)"
+    ordering = "NONE"
+    side = "BOTH"
+
+[[dependencies.mcaefcompat]]
+    modId = "mca"
+    mandatory = true
+    versionRange = "[7.6,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+[[dependencies.mcaefcompat]]
+    modId = "epicfight"
+    mandatory = true
+    versionRange = "[20,)"
+    ordering = "AFTER"
+    side = "BOTH"
+
+[[mods]]
+    modId = "mcaefcompat"
+    version = "1.0.0"
+    displayName = "MCA + Epic Fight Compatibility"
+    description = '''
+Applies MCA genetics scale (height, width) to Epic Fight's armature renderer,
+so player body proportions are correctly reflected during EF combat animations.
+'''

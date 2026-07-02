@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "net.mcaefcompat.mixin",
+  "compatibilityLevel": "JAVA_17",
+  "refmap": "mixins.mcaefcompat.refmap.json",
+  "client": [
+    "MixinPPlayerRenderer",
+    "MixinPlayerEntityExtendedModel"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
